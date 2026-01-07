@@ -1,6 +1,6 @@
 # FlashJSON
 
-🚀 **The world's fastest JSON encoder/decoder for Go** with near-zero memory allocations.
+**The world's fastest JSON encoder/decoder for Go** with near-zero memory allocations.
 
 > ⚠️ **Work in Progress** - This library is being built as an educational project to learn systems programming concepts.
 
@@ -85,10 +85,10 @@ This project includes extensive documentation for learning systems programming:
 
 ## Development Status
 
-- [ ] Phase 1: Foundation (Arena, Tape, Generic Indexer)
-- [ ] Phase 2: SIMD (AVX2, NEON)
-- [ ] Phase 3: Compatibility (Full encoding/json API)
-- [ ] Phase 4: Verification (Benchmarks, Fuzzing)
+- [x] Phase 1: Foundation (Arena, Tape, Generic Indexer)
+- [x] Phase 2: SIMD (AVX2, NEON)
+- [x] Phase 3: Compatibility (Full encoding/json API)
+- [x] Phase 4: Verification (Benchmarks, Fuzzing)
 
 ## Contributing
 

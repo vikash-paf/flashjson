@@ -55,6 +55,14 @@ func main() {
 }
 ```
 
+## Benchmarks
+
+```sh
+go test -v -bench=. -benchmem -run=^$ . 2>&1 | tee bench.txt
+
+cat bench.txt
+```
+
 ## Performance Targets
 
 | Operation | encoding/json | FlashJSON | Speedup |

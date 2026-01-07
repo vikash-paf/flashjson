@@ -5,7 +5,7 @@ A simple JSON encoding/decoding library wrapper for Go.
 ## Installation
 
 ```bash
-go get lorbic.com/flashjson
+go get github.com/vikash-paf/flashjson
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ package main
 
 import (
     "fmt"
-    "lorbic.com/flashjson"
+    "github.com/vikash-paf/flashjson"
 )
 
 func main() {

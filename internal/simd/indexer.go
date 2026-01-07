@@ -1,6 +1,8 @@
 package simd
 
 import (
+	"sync"
+
 	"github.com/vikash-paf/flashjson/internal/tape"
 )
 
@@ -9,6 +11,29 @@ import (
 type Indexer struct {
 	// Configuration
 	useSIMD bool
+
+	// Buffers
+	structPos []uint32
+}
+
+var indexerPool = sync.Pool{
+	New: func() interface{} {
+		return &Indexer{
+			useSIMD:   UsesSIMD,
+			structPos: make([]uint32, 0, 4096), // Pre-allocate
+		}
+	},
+}
+
+// GetIndexer gets an indexer from the pool.
+func GetIndexer() *Indexer {
+	return indexerPool.Get().(*Indexer)
+}
+
+// PutIndexer returns an indexer to the pool.
+func PutIndexer(idx *Indexer) {
+	idx.structPos = idx.structPos[:0]
+	indexerPool.Put(idx)
 }
 
 // NewIndexer creates a new SIMD indexer.
@@ -25,6 +50,19 @@ func (idx *Indexer) Index(input []byte, t *tape.Tape) error {
 		return idx.indexSIMD(input, t)
 	}
 	return idx.indexGeneric(input, t)
+}
+
+// Global helper for easy access
+func Index(input []byte) (*tape.Tape, error) {
+	t := tape.Get()
+	idx := GetIndexer()
+	defer PutIndexer(idx)
+
+	if err := idx.Index(input, t); err != nil {
+		tape.Put(t)
+		return nil, err
+	}
+	return t, nil
 }
 
 // indexGeneric is the fallback pure-Go implementation.
@@ -62,9 +100,11 @@ func (idx *Indexer) processSIMD(input []byte, startPos int, t *tape.Tape) error 
 	// Phase 1: Find all structural character positions using SIMD
 	// Phase 2: Build the tape from those positions
 
-	// Allocate buffers for structural positions
-	// We estimate at most n/2 structural characters
-	structPos := make([]uint32, 0, n/4)
+	// Reuse buffer
+	if cap(idx.structPos) < n/4 {
+		idx.structPos = make([]uint32, 0, n/4)
+	}
+	idx.structPos = idx.structPos[:0]
 
 	// Process 64-byte chunks with SIMD
 	for pos+64 <= n {
@@ -74,7 +114,7 @@ func (idx *Indexer) processSIMD(input []byte, startPos int, t *tape.Tape) error 
 		for mask != 0 {
 			// Find lowest set bit
 			bitPos := trailingZeros64(mask)
-			structPos = append(structPos, uint32(pos+bitPos))
+			idx.structPos = append(idx.structPos, uint32(pos+bitPos))
 			// Clear the bit
 			mask &= mask - 1
 		}
@@ -84,12 +124,12 @@ func (idx *Indexer) processSIMD(input []byte, startPos int, t *tape.Tape) error 
 	// Handle remaining bytes with scalar code
 	for ; pos < n; pos++ {
 		if isStructural(input[pos]) {
-			structPos = append(structPos, uint32(pos))
+			idx.structPos = append(idx.structPos, uint32(pos))
 		}
 	}
 
 	// Phase 2: Build tape from structural positions
-	return buildTapeFromStructural(input, structPos, t)
+	return buildTapeFromStructural(input, idx.structPos, t)
 }
 
 // buildTapeFromStructural builds the tape from structural character positions.

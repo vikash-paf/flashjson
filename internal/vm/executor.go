@@ -5,7 +5,9 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/vikash-paf/flashjson/internal/numbers"
 	"github.com/vikash-paf/flashjson/internal/tape"
+	"github.com/vikash-paf/flashjson/internal/unsafeutil"
 )
 
 // Executor executes a compiled Program against a Tape to populate a struct.
@@ -92,8 +94,8 @@ func (e *Executor) execProgram(prog *Program, ptr unsafe.Pointer) error {
 			if entry.Type != tape.TypeString {
 				return &ExecutionError{e.tapeIndex, "expected string"}
 			}
-			// Extract string from input
-			str := string(e.input[entry.Offset : entry.Offset+entry.Length])
+			// Zero-copy string extraction from input buffer
+			str := unsafeutil.BytesToString(e.input[entry.Offset : entry.Offset+entry.Length])
 			*(*string)(ptr) = str
 			e.tapeIndex++
 
@@ -102,11 +104,12 @@ func (e *Executor) execProgram(prog *Program, ptr unsafe.Pointer) error {
 			if entry.Type != tape.TypeNumber {
 				return &ExecutionError{e.tapeIndex, "expected number"}
 			}
-			// Parse integer
-			numStr := string(e.input[entry.Offset : entry.Offset+entry.Length])
-			val, err := strconv.ParseInt(numStr, 10, 64)
-			if err != nil {
-				// Try parsing as float and truncating
+			// Use SWAR fast integer parsing
+			numBytes := e.input[entry.Offset : entry.Offset+entry.Length]
+			val, ok := numbers.ParseInt64(numBytes)
+			if !ok {
+				// Fallback: try parsing as float and truncating
+				numStr := unsafeutil.BytesToString(numBytes)
 				fval, ferr := strconv.ParseFloat(numStr, 64)
 				if ferr != nil {
 					return &ExecutionError{e.tapeIndex, "invalid integer"}

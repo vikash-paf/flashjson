@@ -398,7 +398,7 @@ FlashJSON target: **2-4 GB/s** for complete parse (index + bind)
 
 Before we implement SIMD, we need to understand:
 - [04-unsafe-go.md](./04-unsafe-go.md) - Working with raw memory
-- [../architecture/01-tape-design.md](../architecture/01-tape-design.md) - Detailed Tape format
+- [Tape Design](../architecture/02-tape-design.md) - Detailed Tape format specification
 
 Then we'll implement:
 1. Generic (pure Go) indexer first

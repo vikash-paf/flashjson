@@ -4,6 +4,8 @@
 
 > ⚠️ **Work in Progress** - This library is being built as an educational project to learn systems programming concepts.
 
+> ⚠️ *Coded with Claude Opus 4.5*
+
 ## Features
 
 - **Blazing Fast**: SIMD-accelerated parsing (AVX2/NEON)
@@ -60,7 +62,7 @@ func main() {
 | Unmarshal (small) | 500ns | 50ns | 10x |
 | Marshal (small) | 300ns | 40ns | 7x |
 | Unmarshal (1KB) | 5μs | 500ns | 10x |
-| Allocations | 50-200/op | 0-2/op | 100x |
+| [Done] Allocations | 50-200/op | 0-2/op | 100x |
 
 ## Architecture
 
